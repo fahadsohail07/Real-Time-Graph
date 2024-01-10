@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Currency Graph</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0 40px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      p {
+        font-weight: bold;
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Real-Time Currency Graph (USD to PKR)</h1>
+    <p>Point style: circle</p>
+    <canvas id="chart" width="800px" height="400px"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      const ctx = document.getElementById("chart").getContext("2d");
+      let chart;
+
+      const config = {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Dataset",
+              data: [],
+              fill: false,
+              borderColor: "#AA336A",
+              tension: 0.1,
+              pointStyle: "circle",
+              pointRadius: 8,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            x: [
+              {
+                type: "linear",
+                position: "bottom",
+              },
+            ],
+            y: [
+              {
+                type: "linear",
+                position: "left",
+              },
+            ],
+          },
+        },
+      };
+
+      const fetchData = async () => {
+        try {
+          const response = await fetch(
+            "https://api.currencyapi.com/v2/latest?apikey=cur_live_sunTzzKHkGGB3nBmgKo0smjTLN8Xb2nRJaDcCRas"
+          );
+          const data = await response.json();
+          const usdToPkrRate = data.data.PKR;
+
+          updateChart(usdToPkrRate);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+
+      function updateChart(usdToPkrRate) {
+        if (usdToPkrRate) {
+          const timestamp = new Date().toLocaleTimeString();
+          chart.data.labels.push(timestamp);
+          chart.data.datasets[0].data.push(usdToPkrRate);
+
+          if (chart.data.labels.length > 6) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+          }
+
+          chart.update();
+        } else {
+          console.log("No data");
+        }
+      }
+
+      fetchData();
+      chart = new Chart(ctx, config);
+      setInterval(fetchData, 35000);
+    </script>
+  </body>
+</html>
